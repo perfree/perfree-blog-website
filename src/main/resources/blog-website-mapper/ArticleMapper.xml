@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.perfree.mapper.ArticleMapper" >
+    <insert id="add" useGeneratedKeys="true" keyProperty="id">
+          insert into p_article
+          ( title, content, summary,categoryId,metaKeywords,metaDescription,
+          thumbnail,isTop,status,userId,isComment,createTime,`type`,viewCount,commentCount,contentModel,
+          `creator`,payType,previewUrl,docUrl,downloadUrl) VALUES
+          (#{title},#{content}, #{summary},#{categoryId},#{metaKeywords},#{metaDescription},
+          #{thumbnail},#{isTop},#{status},#{userId},#{isComment},#{createTime},#{type},#{viewCount},#{commentCount}, #{contentModel},
+          #{creator},#{payType},#{previewUrl},#{docUrl},#{downloadUrl})
+    </insert>
+
+    <update id="initTable">
+        ALTER TABLE `p_article`
+        ADD COLUMN `creator` varchar(256) NULL COMMENT '主题/插件创作者' AFTER `slug`,
+        ADD COLUMN `payType` int(0) NULL COMMENT '付费类型0:免费/1:付费' AFTER `creator`,
+        ADD COLUMN `previewUrl` varchar(256) NULL COMMENT '预览地址' AFTER `payType`,
+        ADD COLUMN `docUrl` varchar(256) NULL COMMENT '使用文档地址' AFTER `previewUrl`,
+        ADD COLUMN `downloadUrl` varchar(256) NULL COMMENT '下载地址' AFTER `docUrl`
+    </update>
+
+    <update id="updateSlug">
+        update p_article set
+            slug = #{slug}
+        where id = #{id}
+    </update>
+
+    <update id="update">
+        update p_article set
+        `title` = #{title},
+        `content` = #{content},
+        summary = #{summary},
+        categoryId = #{categoryId},
+        metaKeywords = #{metaKeywords},
+        metaDescription = #{metaDescription},
+        thumbnail = #{thumbnail},
+        isTop = #{isTop},
+        isComment = #{isComment},
+        status = #{status},
+        updateTime=#{updateTime},
+        slug=#{slug},
+        `type`=#{type},
+        contentModel = #{contentModel},
+        `creator` = #{creator},
+        payType = #{payType},
+        previewUrl = #{previewUrl},
+        docUrl = #{docUrl},
+        downloadUrl = #{downloadUrl}
+        where id = #{id}
+    </update>
+    <update id="articleViewCountAdd">
+         update p_article set
+            viewCount = viewCount+1
+            where id = #{articleId}
+    </update>
+
+    <resultMap id="WEB_SITE_LIST_RESULT" type="org.perfree.model.Article">
+        <id property="id" column="id"></id>
+        <result property="title" column="title"></result>
+        <result property="content" column="content"></result>
+        <result property="summary" column="summary"></result>
+        <result property="categoryId" column="categoryId"></result>
+        <result property="metaKeywords" column="metaKeywords"></result>
+        <result property="metaDescription" column="metaDescription"></result>
+        <result property="thumbnail" column="thumbnail"></result>
+        <result property="isTop" column="isTop"></result>
+        <result property="status" column="status"></result>
+        <result property="commentCount" column="commentCount"></result>
+        <result property="viewCount" column="viewCount"></result>
+        <result property="userId" column="userId"></result>
+        <result property="isComment" column="isComment"></result>
+        <result property="type" column="type"></result>
+        <result property="createTime" column="createTime"></result>
+        <result property="updateTime" column="updateTime"></result>
+        <result property="slug" column="slug"></result>
+        <result property="contentModel" column="contentModel"></result>
+        <result property="creator" column="creator"></result>
+        <result property="payType" column="payType"></result>
+        <result property="previewUrl" column="previewUrl"></result>
+        <result property="docUrl" column="docUrl"></result>
+        <result property="downloadUrl" column="downloadUrl"></result>
+        <association property="user" javaType="com.perfree.model.User">
+            <id property="id" column="userId" />
+            <result property="userName" column="userName"/>
+            <result property="avatar" column="avatar"/>
+            <result property="email" column="email"/>
+            <result property="website" column="website"/>
+        </association>
+    </resultMap>
+
+    <select id="getById" resultMap="WEB_SITE_LIST_RESULT">
+        select t1.*,t2.name categoryName,t3.userName,t3.avatar,t3.email,t3.website from p_article t1 left join p_category t2 on t1.categoryId = t2.id left join p_user t3 on t1.userId = t3.id
+        where t1.id = #{id}
+    </select>
+
+    <select id="getBySlug" resultMap="WEB_SITE_LIST_RESULT">
+        select t1.*,t2.name categoryName,t3.userName,t3.avatar,t3.email,t3.website from p_article t1 left join p_category t2 on t1.categoryId = t2.id left join p_user t3 on t1.userId = t3.id
+        where t1.slug = #{slug} and t1.type= #{type}
+    </select>
+
+    <select id="getList" resultMap="WEB_SITE_LIST_RESULT">
+        select t1.*,t2.name categoryName,t3.userName,t3.avatar,t3.email,t3.website from p_article t1 left join p_category t2 on t1.categoryId = t2.id left join p_user t3 on t1.userId = t3.id
+        where 1=1
+        <if test="article.title != null and article.title != ''">
+            <bind name="title" value="'%' + _parameter.article.title + '%'" />
+            and t1.title like #{title,jdbcType=VARCHAR}
+        </if>
+        <if test="article.type != null and article.type != ''">
+            and t1.type = #{article.type}
+        </if>
+        <if test="article.payType != null and article.payType != ''">
+            and t1.payType = #{article.payType}
+        </if>
+        order by t1.isTop desc,t1.createTime desc limit #{page},#{size}
+    </select>
+    <select id="getTotal" resultType="java.lang.Long">
+        select count(1) from p_article t1 left join p_category t2 on t1.categoryId = t2.id left join p_user t3 on t1.userId = t3.id
+        where 1=1
+        <if test="title != null and title != ''">
+            <bind name="title" value="'%' + _parameter.title + '%'" />
+            and t1.title like #{title,jdbcType=VARCHAR}
+        </if>
+        <if test="type != null and type != ''">
+            and t1.type = #{type}
+        </if>
+        <if test="payType != null and payType != ''">
+            and t1.payType = #{payType}
+        </if>
+    </select>
+</mapper>
