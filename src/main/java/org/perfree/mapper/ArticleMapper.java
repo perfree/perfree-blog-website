@@ -27,4 +27,6 @@ public interface ArticleMapper {
 
     void articleViewCountAdd(Long articleId);
 
+    void removeTable();
+
 }

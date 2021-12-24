@@ -32,5 +32,6 @@ public class PluginInitService implements PluginEvent {
 
     @Override
     public void onUnInstall() {
+        articleMapper.removeTable();
     }
 }

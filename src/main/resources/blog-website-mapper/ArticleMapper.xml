@@ -54,6 +54,14 @@
             viewCount = viewCount+1
             where id = #{articleId}
     </update>
+    <update id="removeTable">
+            ALTER TABLE `p_article`
+            DROP COLUMN `creator`,
+            DROP COLUMN `payType`,
+            DROP COLUMN `previewUrl`,
+            DROP COLUMN `docUrl`,
+            DROP COLUMN `downloadUrl`
+    </update>
 
     <resultMap id="WEB_SITE_LIST_RESULT" type="org.perfree.model.Article">
         <id property="id" column="id"></id>
